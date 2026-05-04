@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QST Certificate Manager</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Fabric.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- FileSaver.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- Firebase SDK (compat mode for simple integration) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <span class="logo-q">Q</span><span class="logo-st">ST</span>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">QST</span>
+        <span class="logo-sub">Certificate Manager</span>
+      </div>
+    </div>
+
+    <div class="sidebar-deco"></div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active" data-view="dashboard" href="#dashboard">
+        <i class="fa-solid fa-gauge-high nav-icon"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-view="templates" href="#templates">
+        <i class="fa-solid fa-layer-group nav-icon"></i>
+        <span>Templates</span>
+      </a>
+      <a class="nav-item" data-view="import" href="#import">
+        <i class="fa-solid fa-file-arrow-up nav-icon"></i>
+        <span>Import Data</span>
+      </a>
+      <a class="nav-item" data-view="generate" href="#generate">
+        <i class="fa-solid fa-certificate nav-icon"></i>
+        <span>Generate</span>
+        <span class="nav-badge" id="queue-badge" style="display:none">0</span>
+      </a>
+
+      <div class="nav-section-label">Management</div>
+      <a class="nav-item" data-view="database" href="#database">
+        <i class="fa-solid fa-database nav-icon"></i>
+        <span>Certificate DB</span>
+      </a>
+      <a class="nav-item" data-view="verify" href="#verify">
+        <i class="fa-solid fa-shield-check nav-icon"></i>
+        <span>Verification</span>
+      </a>
+
+      <div class="nav-section-label">System</div>
+      <a class="nav-item" data-view="settings" href="#settings">
+        <i class="fa-solid fa-gear nav-icon"></i>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">A</div>
+        <div class="user-info">
+          <span class="user-name">Admin</span>
+          <span class="user-role">QST Staff</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+    <!-- Top Header -->
+    <header class="top-header">
+      <button class="sidebar-toggle" id="sidebar-toggle">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-home">QST</span>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current" id="breadcrumb-current">Dashboard</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme">
+          <i class="fa-solid fa-moon" id="theme-icon"></i>
+        </button>
+        <button class="btn btn-gold" onclick="App.router.navigate('generate')">
+          <i class="fa-solid fa-plus"></i> New Certificate
+        </button>
+      </div>
+    </header>
+
+    <!-- Views Container -->
+    <main class="content-area">
+      <div class="view active" id="view-dashboard"></div>
+      <div class="view" id="view-templates"></div>
+      <div class="view" id="view-editor"></div>
+      <div class="view" id="view-import"></div>
+      <div class="view" id="view-generate"></div>
+      <div class="view" id="view-database"></div>
+      <div class="view" id="view-verify"></div>
+      <div class="view" id="view-settings"></div>
+    </main>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Global Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box" id="modal-box">
+      <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Hidden QR container -->
+  <div id="qr-render-zone" style="position:fixed;left:-9999px;top:-9999px;"></div>
+
+  <!-- Login Screen -->
+  <div class="login-overlay" id="login-overlay" style="display:none;">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-mark"><span class="logo-q">Q</span><span class="logo-st">ST</span></div>
+        <div>
+          <div class="login-title">QST Certificate Manager</div>
+          <div class="login-sub">Sign in to continue</div>
+        </div>
+      </div>
+
+      <div class="sidebar-deco" style="margin:12px 0 20px;"></div>
+
+      <div id="login-error" class="login-error" style="display:none;"></div>
+
+      <form id="login-form" onsubmit="event.preventDefault();Auth.signIn();">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="login-email" class="form-input" placeholder="staff@qst.com" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;margin-top:8px;">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </button>
+
+        <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted);">
+          <a href="#" onclick="event.preventDefault();Auth.toggleMode('signup');" id="link-signup">Create Account</a>
+          <span style="margin:0 8px;">·</span>
+          <a href="#" onclick="event.preventDefault();Auth.resetPassword();">Forgot password?</a>
+        </div>
+      </form>
+
+      <div id="setup-required" style="display:none;text-align:center;padding:20px 0;">
+        <i class="fa-solid fa-cloud-arrow-up" style="font-size:36px;color:var(--gold);margin-bottom:10px;"></i>
+        <div style="font-weight:600;margin-bottom:6px;">Cloud Sync Not Configured</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          Configure Firebase to enable login & cloud sync.<br>See <strong style="color:var(--gold);">SETUP.md</strong> for step-by-step instructions.
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Auth.useLocalMode()">
+          <i class="fa-solid fa-laptop"></i> Continue in Local Mode
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Modules (order matters) -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/generate.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/verify.js"></script>
+  <script src="js/settings.js"></script>
+
+  <script>
+    // Boot the app
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>
